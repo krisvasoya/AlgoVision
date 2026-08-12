@@ -8,14 +8,21 @@ import { Footer } from "@/components/layout/Footer";
 import { ExamEngine } from "@/engine/exam/ExamEngine";
 import { ProgressTracker } from "@/engine/progress/ProgressTracker";
 import type { ExamSession, ExamTopic, ExamResult } from "@/engine/exam/types";
-import { Clock, ShieldAlert, CheckCircle2, XCircle, Award, BarChart3, RotateCcw, ArrowRight } from "lucide-react";
+import { Clock, ShieldAlert, ShieldCheck, CheckCircle2, XCircle, GraduationCap, BarChart3, Search, Boxes, Network, GitBranch, RotateCcw, ArrowRight } from "lucide-react";
 
-const TOPICS: { id: ExamTopic; title: string; desc: string; icon: string }[] = [
-  { id: "sorting", title: "Sorting Algorithms", desc: "Bubble, Selection, and Insertion Sort", icon: "📊" },
-  { id: "searching", title: "Searching Algorithms", desc: "Linear and Binary Search", icon: "🔍" },
-  { id: "data-structures", title: "Data Structures", desc: "Stack, Queue, Linked List, BST", icon: "📦" },
-  { id: "graphs", title: "Graph Algorithms", desc: "BFS, DFS, and Dijkstra", icon: "🌐" },
-  { id: "recursion", title: "Recursion & Call Stack", desc: "Factorial, Fibonacci, Hanoi", icon: "🔄" },
+interface TopicConfig {
+  id: ExamTopic;
+  title: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const TOPICS: TopicConfig[] = [
+  { id: "sorting", title: "Sorting Algorithms", desc: "Bubble, Selection, and Insertion Sort", icon: BarChart3 },
+  { id: "searching", title: "Searching Algorithms", desc: "Linear and Binary Search", icon: Search },
+  { id: "data-structures", title: "Data Structures", desc: "Stack, Queue, Linked List, BST", icon: Boxes },
+  { id: "graphs", title: "Graph Algorithms", desc: "BFS, DFS, and Dijkstra", icon: Network },
+  { id: "recursion", title: "Recursion & Call Stack", desc: "Factorial, Fibonacci, Hanoi", icon: GitBranch },
 ];
 
 export default function ExamPage() {
@@ -120,36 +127,42 @@ export default function ExamPage() {
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-xl font-extrabold text-slate-100 flex items-center gap-2">
-                  <Award className="w-6 h-6 text-indigo-400" /> Exam Mode Competency Assessments
+                  <GraduationCap className="w-6 h-6 text-indigo-400" /> Exam Mode Competency Assessments
                 </h1>
                 <p className="text-slate-400 text-xs mt-1">
                   Timed assessments with anti-assistance mode. AI Tutor & solution previews are disabled during the test.
                 </p>
               </div>
-              <span className="text-xs font-mono font-bold px-3 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-lg flex items-center gap-1.5 shrink-0">
-                <ShieldAlert className="w-4 h-4" /> Timed & Grounded
+              <span className="text-xs font-mono font-bold px-3 py-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-lg flex items-center gap-1.5 shrink-0">
+                <ShieldCheck className="w-4 h-4 text-indigo-400" /> Timed & Grounded
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {TOPICS.map((topic) => (
-                <div
-                  key={topic.id}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition shadow flex flex-col justify-between gap-4"
-                >
-                  <div>
-                    <div className="text-3xl mb-2">{topic.icon}</div>
-                    <h3 className="font-bold text-sm text-slate-200">{topic.title}</h3>
-                    <p className="text-xs text-slate-400 mt-1">{topic.desc}</p>
-                  </div>
-                  <button
-                    onClick={() => handleStartExam(topic.id)}
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow"
+              {TOPICS.map((topic) => {
+                const IconComponent = topic.icon;
+
+                return (
+                  <div
+                    key={topic.id}
+                    className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition shadow flex flex-col justify-between gap-4"
                   >
-                    Start Exam <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    <div>
+                      <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+                        <IconComponent className="w-6 h-6 text-indigo-400" />
+                      </div>
+                      <h3 className="font-bold text-sm text-slate-200">{topic.title}</h3>
+                      <p className="text-xs text-slate-400 mt-1">{topic.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => handleStartExam(topic.id)}
+                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow"
+                    >
+                      Start Exam <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -241,7 +254,7 @@ export default function ExamPage() {
           <div className="flex flex-col gap-6">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-3xl font-extrabold text-indigo-400">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-3xl font-extrabold text-indigo-400 font-mono">
                   {result.percentage}%
                 </div>
                 <div>
