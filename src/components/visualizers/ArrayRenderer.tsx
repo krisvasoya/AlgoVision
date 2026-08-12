@@ -20,12 +20,12 @@ const highlightStyles: Record<ElementHighlightState, { card: string; bar: string
     badge: "bg-indigo-950 text-indigo-300 border-indigo-500/50",
   },
   compared: {
-    card: "bg-amber-600/90 border-amber-400 text-white shadow-lg shadow-amber-500/30 scale-105 animate-pulse",
+    card: "bg-amber-600/90 border-amber-400 text-white shadow-lg shadow-amber-500/30 scale-105",
     bar: "fill-amber-500/90 stroke-amber-300",
     badge: "bg-amber-950 text-amber-300 border-amber-500/50",
   },
   swapped: {
-    card: "bg-rose-600/90 border-rose-400 text-white shadow-lg shadow-rose-500/30 scale-105 animate-bounce",
+    card: "bg-rose-600/90 border-rose-400 text-white shadow-lg shadow-rose-500/30 scale-105",
     bar: "fill-rose-500/90 stroke-rose-300",
     badge: "bg-rose-950 text-rose-300 border-rose-500/50",
   },
@@ -49,7 +49,7 @@ const highlightStyles: Record<ElementHighlightState, { card: string; bar: string
 export const ArrayRenderer: React.FC<ArrayRendererProps> = ({ state }) => {
   if (!state || !state.data || !state.data.elements || state.data.elements.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm italic">
+      <div className="flex flex-col items-center justify-center h-full text-slate-500 text-xs italic">
         Array visualizer ready. Load algorithm trace to render elements.
       </div>
     );
@@ -61,20 +61,25 @@ export const ArrayRenderer: React.FC<ArrayRendererProps> = ({ state }) => {
     .filter((v: number) => !isNaN(v));
   const maxValue = Math.max(...numericValues, 1);
 
-  // SVG parameters
-  const svgHeight = 120;
-  const barWidth = 40;
+  // SVG parameters (Flexible Height Scaling)
+  const svgHeight = 150;
+  const barWidth = 44;
   const gap = 16;
   const totalWidth = elements.length * (barWidth + gap) + gap;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full p-4 overflow-x-auto">
+    <div className="flex flex-col items-center justify-center w-full h-full p-4 overflow-x-auto select-none min-w-0">
       {/* SVG Bar Chart Overlay */}
-      <div className="w-full flex justify-center mb-2">
-        <svg width={totalWidth} height={svgHeight} className="overflow-visible">
+      <div className="w-full flex justify-center mb-3">
+        <svg
+          viewBox={`0 0 ${totalWidth} ${svgHeight}`}
+          width={totalWidth}
+          height={svgHeight}
+          className="overflow-visible drop-shadow"
+        >
           {elements.map((item: ArrayElement, idx: number) => {
             const numVal = typeof item.value === "number" ? item.value : parseFloat(String(item.value)) || 1;
-            const barHeight = Math.max(16, (numVal / maxValue) * (svgHeight - 20));
+            const barHeight = Math.max(20, (numVal / maxValue) * (svgHeight - 24));
             const x = gap + idx * (barWidth + gap);
             const y = svgHeight - barHeight;
             const style = highlightStyles[item.highlightState] || highlightStyles.default;
@@ -94,7 +99,7 @@ export const ArrayRenderer: React.FC<ArrayRendererProps> = ({ state }) => {
                   x={x + barWidth / 2}
                   y={y - 6}
                   textAnchor="middle"
-                  className="fill-slate-300 font-mono text-xs font-semibold"
+                  className="fill-slate-300 font-mono text-xs font-bold"
                 >
                   {item.value}
                 </text>
@@ -105,14 +110,14 @@ export const ArrayRenderer: React.FC<ArrayRendererProps> = ({ state }) => {
       </div>
 
       {/* React Array Element Cards */}
-      <div className="flex items-end gap-4 max-w-full overflow-x-auto pb-2">
+      <div className="flex items-end gap-4 max-w-full overflow-x-auto pb-1">
         {elements.map((item: ArrayElement) => {
           const style = highlightStyles[item.highlightState] || highlightStyles.default;
 
           return (
             <div key={item.id} className="flex flex-col items-center gap-1.5 group">
               {/* Pointer Badges */}
-              <div className="h-6 flex items-center gap-1">
+              <div className="h-5 flex items-center gap-1">
                 {item.pointers && item.pointers.length > 0 ? (
                   item.pointers.map((ptr: string, pIdx: number) => (
                     <span
@@ -141,7 +146,7 @@ export const ArrayRenderer: React.FC<ArrayRendererProps> = ({ state }) => {
               </div>
 
               {/* Index Label */}
-              <span className="text-[11px] font-mono text-slate-500 group-hover:text-slate-300 transition-colors">
+              <span className="text-[11px] font-mono text-slate-400 font-semibold group-hover:text-slate-200 transition-colors">
                 [{item.index}]
               </span>
             </div>

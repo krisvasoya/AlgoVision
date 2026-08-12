@@ -1,7 +1,7 @@
 import React from "react";
 import type { GraphVisualState } from "@/types/visualization";
 import { calculateGraphLayout } from "@/engine/geometry/graphLayout";
-import { Layers, Table, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { Layers, Table, Sparkles, CheckCircle2 } from "lucide-react";
 
 interface GraphRendererProps {
   state: GraphVisualState;
@@ -20,12 +20,12 @@ export function GraphRenderer({ state }: GraphRendererProps) {
   const shortestPathTreeEdgeIds = state.shortestPathTreeEdgeIds || [];
   const finalPathEdgeIds = state.finalPathEdgeIds || [];
 
-  const layout = calculateGraphLayout(nodes, edges, 560, 260);
+  const layout = calculateGraphLayout(nodes, edges, 600, 280);
 
   return (
-    <div className="flex flex-col items-center justify-between h-full w-full bg-slate-900 border border-slate-800 rounded-xl p-4 relative overflow-hidden select-none">
+    <div className="flex flex-col items-center justify-between h-full w-full bg-slate-900 border border-slate-800 rounded-xl p-4 relative overflow-hidden select-none min-w-0 min-h-0">
       {/* Top Header & Accessibility Bar */}
-      <div className="text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider flex items-center justify-between w-full">
+      <div className="text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider flex items-center justify-between w-full shrink-0">
         <span className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Graph Canvas
         </span>
@@ -43,16 +43,17 @@ export function GraphRenderer({ state }: GraphRendererProps) {
         )}
       </div>
 
-      {/* Main SVG Graph Canvas */}
-      <div className="w-full flex-1 flex items-center justify-center overflow-auto relative">
+      {/* Main SVG Graph Canvas (Bounded Responsively) */}
+      <div className="w-full flex-1 relative min-w-0 min-h-0 overflow-hidden flex items-center justify-center">
         {nodes.length === 0 ? (
           <div className="text-slate-500 text-xs italic py-8">Empty Graph</div>
         ) : (
           <svg
-            width={layout.width}
-            height={layout.height}
             viewBox={`0 0 ${layout.width} ${layout.height}`}
-            className="max-w-full h-auto drop-shadow-md"
+            width="100%"
+            height="100%"
+            preserveAspectRatio="xMidYMid meet"
+            className="w-full h-full drop-shadow-md"
           >
             <defs>
               <marker
@@ -209,27 +210,26 @@ export function GraphRenderer({ state }: GraphRendererProps) {
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r="22"
+                    r="20"
                     fill={fillColor}
                     stroke={isStart || isTarget ? "#f59e0b" : strokeColor}
                     strokeWidth={isActive || isSelectedMin || isStart || isTarget ? "3" : "2"}
                   />
                   <text
                     x={node.x}
-                    y={node.y + 5}
+                    y={node.y + 4}
                     textAnchor="middle"
                     fill={textColor}
-                    fontSize="13"
+                    fontSize="12"
                     fontWeight="bold"
                     fontFamily="monospace"
                   >
                     {node.label}
                   </text>
-                  {/* Accessibility Badge Label */}
                   {badgeText && (
                     <text
-                      x={node.x + 16}
-                      y={node.y - 14}
+                      x={node.x + 15}
+                      y={node.y - 12}
                       fill="#94a3b8"
                       fontSize="9"
                       fontWeight="bold"
@@ -245,12 +245,12 @@ export function GraphRenderer({ state }: GraphRendererProps) {
         )}
       </div>
 
-      {/* Semantic Algorithm State Panel (Positioned cleanly below the SVG canvas) */}
-      <div className="w-full mt-2 pt-2 border-t border-slate-800 space-y-2">
+      {/* Semantic Algorithm State Panel */}
+      <div className="w-full mt-2 pt-2 border-t border-slate-800 space-y-2 shrink-0">
         {queuedNodeIds && (
           <div className="p-2 bg-slate-950 border border-indigo-500/30 rounded-lg flex items-center gap-3 text-xs">
             <span className="font-bold text-indigo-400 flex items-center gap-1.5 shrink-0">
-              <Layers className="w-3.5 h-3.5" /> BFS Queue (FIFO):
+              <Layers className="w-3.5 h-3.5" /> BFS Queue:
             </span>
             <div className="flex items-center gap-1.5 overflow-x-auto font-mono text-slate-200">
               {queuedNodeIds.length === 0 ? (
@@ -276,7 +276,7 @@ export function GraphRenderer({ state }: GraphRendererProps) {
         {stackedNodeIds && (
           <div className="p-2 bg-slate-950 border border-amber-500/30 rounded-lg flex items-center gap-3 text-xs">
             <span className="font-bold text-amber-400 flex items-center gap-1.5 shrink-0">
-              <Layers className="w-3.5 h-3.5" /> DFS Stack (LIFO):
+              <Layers className="w-3.5 h-3.5" /> DFS Stack:
             </span>
             <div className="flex items-center gap-1.5 overflow-x-auto font-mono text-slate-200">
               {stackedNodeIds.length === 0 ? (
@@ -303,18 +303,18 @@ export function GraphRenderer({ state }: GraphRendererProps) {
         )}
 
         {distanceTable && (
-          <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-xs space-y-1.5">
+          <div className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs space-y-1.5">
             <div className="font-bold text-emerald-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Table className="w-3.5 h-3.5" /> Dijkstra Live Distance Table & Relaxation State
+                <Table className="w-3.5 h-3.5" /> Dijkstra Live Distance Table
               </span>
               {selectedNodeId && (
                 <span className="text-[11px] font-mono text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                  MIN CANDIDATE: Node {selectedNodeId}
+                  MIN: Node {selectedNodeId}
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-5 sm:grid-cols-5 gap-2 font-mono text-[11px]">
+            <div className="grid grid-cols-5 gap-1.5 font-mono text-[11px]">
               {distanceTable.map((entry) => {
                 const isSelected = entry.node === selectedNodeId;
                 const isFinal = entry.isFinalized;
@@ -324,15 +324,13 @@ export function GraphRenderer({ state }: GraphRendererProps) {
                 if (isSelected) cardStyle = "bg-amber-500/25 border-amber-500/60 text-amber-200 font-bold ring-1 ring-amber-500/50";
 
                 return (
-                  <div key={`dt-${entry.node}`} className={`p-1.5 rounded border text-center ${cardStyle}`}>
+                  <div key={`dt-${entry.node}`} className={`p-1 rounded border text-center ${cardStyle}`}>
                     <div className="font-bold text-slate-100 flex items-center justify-center gap-1">
                       <span>Node {entry.node}</span>
                       {isFinal && <CheckCircle2 className="w-3 h-3 text-emerald-400 inline" />}
                     </div>
-                    <div className="text-amber-400 font-bold text-xs mt-0.5">dist: {entry.distance}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      parent: {entry.parent ? entry.parent : "null"}
-                    </div>
+                    <div className="text-amber-400 font-bold text-[11px] mt-0.5">dist: {entry.distance}</div>
+                    <div className="text-[10px] text-slate-400">parent: {entry.parent ? entry.parent : "null"}</div>
                   </div>
                 );
               })}

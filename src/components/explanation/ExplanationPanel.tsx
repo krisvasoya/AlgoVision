@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 
 interface ExplanationPanelProps {
   description?: string;
@@ -30,15 +30,16 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           {description ? (
             <p className="text-slate-200">{description}</p>
           ) : (
-            <p className="text-slate-500 italic">
-              Select or play an algorithm trace to view human-readable step explanations.
+            <p className="text-slate-500 italic text-xs">
+              Select or play an algorithm trace to view step explanations.
             </p>
           )}
         </div>
 
         {complexityHint && (
-          <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-400/90 font-mono">
-            💡 {complexityHint}
+          <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-400/90 font-mono flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>{complexityHint}</span>
           </div>
         )}
       </div>

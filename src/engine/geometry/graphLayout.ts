@@ -32,24 +32,28 @@ export function calculateGraphLayout(
   rawNodes: GraphNodeData[],
   rawEdges: GraphEdgeData[],
   width: number = 600,
-  height: number = 320
+  height: number = 280
 ): GraphLayoutResult {
   if (rawNodes.length === 0) {
     return { nodes: [], edges: [], width, height };
   }
 
+  const padding = 40;
   const centerX = width / 2;
   const centerY = height / 2;
-  const radius = Math.min(width, height) / 2.6;
+  const radius = Math.min(width - padding * 2, height - padding * 2) / 2.2;
 
   const nodeMap = new Map<string, PositionedGraphNode>();
   const total = rawNodes.length;
 
   rawNodes.forEach((node, idx) => {
-    // Use custom coordinates if provided, else compute circular layout
+    // Compute circular layout or clamp custom coordinates safely within padding
     const angle = (2 * Math.PI * idx) / total - Math.PI / 2;
-    const x = node.x ?? centerX + radius * Math.cos(angle);
-    const y = node.y ?? centerY + radius * Math.sin(angle);
+    const rawX = node.x ?? centerX + radius * Math.cos(angle);
+    const rawY = node.y ?? centerY + radius * Math.sin(angle);
+
+    const x = Math.max(padding, Math.min(width - padding, rawX));
+    const y = Math.max(padding, Math.min(height - padding, rawY));
 
     const posNode: PositionedGraphNode = {
       id: node.id,
