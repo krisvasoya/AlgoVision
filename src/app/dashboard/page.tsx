@@ -13,12 +13,14 @@ import { LayoutDashboard, BookOpen, Target, ShieldAlert, ArrowRight, History, Ro
 
 export default function DashboardPage() {
   const [progress, setProgress] = useState<StudentProgress | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setProgress(ProgressTracker.getProgress());
   }, []);
 
-  if (!progress) return null;
+  if (!mounted || !progress) return null;
 
   const currentAlgo = ALGORITHM_REGISTRY.get("bubble-sort");
 

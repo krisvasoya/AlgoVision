@@ -32,8 +32,15 @@ export default function HomePage() {
   const [learningMode, setLearningMode] = useState<LearningMode>("learn");
   const [showTutorPanel, setShowTutorPanel] = useState<boolean>(false);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const activeAlgorithm = ALGORITHM_REGISTRY.get(selectedAlgoId) || allAlgorithms[0];
   const isSearchAlgo = activeAlgorithm?.category === "searching";
+
+  if (!mounted) return null;
 
   // Re-generate execution trace when algorithm or input changes
   const runAlgorithmTrace = (algoId: string, arr: number[], target: number) => {

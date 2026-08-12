@@ -66,6 +66,13 @@ export default function PlaygroundPage() {
     durationMs?: number;
     error?: string;
   }>({});
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const { loadTrace, currentStep, reset } = useExecutionStore();
 
@@ -160,7 +167,7 @@ export default function PlaygroundPage() {
 
           {/* Preset Selector & Manual Override */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-slate-900/60 p-2.5 border border-slate-800 rounded-xl">
-            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
                 Presets:
               </span>
@@ -255,7 +262,7 @@ export default function PlaygroundPage() {
                       : "bg-amber-500/10 text-amber-300 border-amber-500/30"
                   }`}
                 >
-                  Confidence: Math.round({inference.confidence * 100})%
+                  Confidence: {Math.round(inference.confidence * 100)}%
                 </span>
               </div>
 

@@ -18,6 +18,7 @@ export interface AlgorithmDefinition<TInput = any, TVisualState extends VisualSt
   description: string;
   complexity: ComplexityInfo;
   defaultInput: TInput;
+  inputType?: "array" | "search" | "number";
   sourceCode: string;
   generateTrace: (input: TInput) => ExecutionTrace;
 }

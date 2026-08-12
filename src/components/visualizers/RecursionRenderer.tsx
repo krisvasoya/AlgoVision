@@ -2,7 +2,7 @@ import React from "react";
 import type { RecursionVisualState } from "@/types/visualization";
 import { CallStackRenderer } from "./CallStackRenderer";
 import { ArrayRenderer } from "./ArrayRenderer";
-import { GitBranch, CornerDownRight } from "lucide-react";
+import { GitBranch, CornerDownRight, Layers } from "lucide-react";
 import type { CallTreeNode } from "@/types/execution";
 
 interface RecursionRendererProps {
@@ -14,20 +14,24 @@ export function RecursionRenderer({ state }: RecursionRendererProps) {
   const runtimeState = state.runtimeState;
   const callTree = runtimeState.callTree;
 
+  const hasCallTree = !!callTree;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full w-full select-none">
-      {/* Problem Visualizer / Call Tree (Takes 2 Columns) */}
-      <div className="md:col-span-2 flex flex-col justify-between bg-slate-900 border border-slate-800 rounded-xl p-4 relative overflow-hidden">
+    <div className="flex flex-col md:flex-row gap-4 h-full w-full select-none min-w-0">
+      {/* Problem Visualizer / Call Tree */}
+      <div className={`flex-1 flex flex-col justify-between bg-slate-900 border border-slate-800 rounded-xl p-4 relative overflow-hidden min-w-0 ${hasCallTree || subVisualState ? "" : "hidden md:flex"}`}>
         <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center justify-between w-full">
-          <span>Recursion Visualizer ({functionName})</span>
+          <span className="flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-indigo-400" /> Recursion Inspector ({functionName})
+          </span>
           {runtimeState.returnValue !== undefined && (
-            <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
-              <CornerDownRight className="w-3 h-3" /> Final Return Value: {JSON.stringify(runtimeState.returnValue)}
+            <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1 shrink-0">
+              <CornerDownRight className="w-3 h-3" /> Return: {JSON.stringify(runtimeState.returnValue)}
             </span>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center overflow-auto w-full">
+        <div className="flex-1 flex flex-col items-center justify-center overflow-auto w-full min-w-0">
           {subVisualState ? (
             subVisualState.type === "array" ? (
               <ArrayRenderer state={subVisualState} />
@@ -35,20 +39,22 @@ export function RecursionRenderer({ state }: RecursionRendererProps) {
               <div className="text-xs text-slate-400">Sub-visualization</div>
             )
           ) : callTree ? (
-            <div className="w-full flex-1 flex flex-col items-center justify-center p-3 bg-slate-950/60 border border-slate-800 rounded-lg">
+            <div className="w-full flex-1 flex flex-col items-center justify-center p-3 bg-slate-950/60 border border-slate-800 rounded-lg overflow-auto">
               <div className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
-                <GitBranch className="w-4 h-4 text-indigo-400" /> Branching Call Tree History
+                <GitBranch className="w-4 h-4 text-indigo-400" /> Branching Call Tree
               </div>
               <RenderCallTreeNode node={callTree} />
             </div>
           ) : (
-            <div className="text-slate-500 text-xs italic py-8">Active Recursion Trace</div>
+            <div className="text-slate-400 text-xs font-mono py-6 text-center">
+              Linear Recursion Active. Inspect live stack frames on the right panel.
+            </div>
           )}
         </div>
       </div>
 
-      {/* Live Call Stack Panel (Takes 1 Column) */}
-      <div className="md:col-span-1 h-full">
+      {/* Live Call Stack Panel */}
+      <div className="flex-1 h-full min-w-0">
         <CallStackRenderer runtimeState={runtimeState} />
       </div>
     </div>

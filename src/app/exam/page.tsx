@@ -23,6 +23,13 @@ export default function ExamPage() {
   const [session, setSession] = useState<ExamSession | null>(null);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   // Timer Effect
   useEffect(() => {

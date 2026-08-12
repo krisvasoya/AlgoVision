@@ -1,6 +1,7 @@
 import React from "react";
 import type { AlgorithmDefinition } from "@/types/algorithm";
-import { Sparkles, GraduationCap, HelpCircle, ShieldAlert } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap, HelpCircle, Award } from "lucide-react";
 
 export type LearningMode = "learn" | "practice" | "exam";
 
@@ -53,16 +54,12 @@ export function AlgorithmHeader({ algorithm, activeMode, onModeChange }: Algorit
               <HelpCircle className="w-3.5 h-3.5" /> Practice
             </button>
 
-            <button
-              onClick={() => onModeChange("exam")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
-                activeMode === "exam"
-                  ? "bg-indigo-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
+            <Link
+              href="/exam"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             >
-              <Sparkles className="w-3.5 h-3.5" /> Exam <span className="text-[10px] opacity-70">(Soon)</span>
-            </button>
+              <Award className="w-3.5 h-3.5 text-amber-400" /> Exam Mode
+            </Link>
           </div>
 
           {/* Complexity Badges */}
