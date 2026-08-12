@@ -5,7 +5,7 @@ import { useExecutionStore } from "@/stores/execution-store";
 import { ContextIndicator } from "./ContextIndicator";
 import { QuickActions } from "./QuickActions";
 import { TutorContextBuilder } from "@/engine/tutor/TutorContextBuilder";
-import { MockTutorModel } from "@/engine/tutor/MockTutorModel";
+import { ProductionTutorModel } from "@/engine/tutor/ProductionTutorModel";
 import { TutorCache } from "@/engine/tutor/TutorCache";
 import type { TutorRequestType, TutorResponse } from "@/engine/tutor/types";
 import { Bot, Send, User, AlertCircle, RefreshCw } from "lucide-react";
@@ -35,7 +35,7 @@ export const TutorPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const model = new MockTutorModel();
+  const model = new ProductionTutorModel();
 
   const handleRequest = async (type: TutorRequestType, customText?: string) => {
     if (!trace || !currentStep) return;
@@ -51,7 +51,8 @@ export const TutorPanel: React.FC = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    // Keep bounded conversation memory (max 10 recent messages)
+    setMessages((prev) => [...prev.slice(-8), userMsg]);
 
     try {
       // Check cache first
@@ -71,8 +72,8 @@ export const TutorPanel: React.FC = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
-      setMessages((prev) => [...prev, tutorMsg]);
-    } catch (err: any) {
+      setMessages((prev) => [...prev.slice(-9), tutorMsg]);
+    } catch {
       setErrorMsg("Tutor temporarily unavailable.");
     } finally {
       setLoading(false);
