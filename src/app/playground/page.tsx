@@ -9,7 +9,7 @@ import { Visualizer } from "@/components/visualizers/Visualizer";
 import { Timeline } from "@/components/timeline/Timeline";
 import { VariableInspector } from "@/components/variables/VariableInspector";
 import { ExecutionEngine } from "@/engine/execution/ExecutionEngine";
-import { CodeAnalyzer } from "@/engine/static-analysis/CodeAnalyzer";
+import { CodeAnalyzer } from "@/engine/analysis/CodeAnalyzer";
 import { VisualizationInferenceEngine } from "@/engine/visualization/VisualizationInferenceEngine";
 import { useExecutionStore } from "@/stores/execution-store";
 import type { InferredVisualization } from "@/types/visualization";
@@ -130,7 +130,7 @@ export default function PlaygroundPage() {
       if (!analysis.isValid) {
         setStatus("error");
         setExecutionOutput({
-          error: `STATIC_ANALYSIS_ERROR: ${analysis.errors.join(", ")}`,
+          error: `STATIC_ANALYSIS_ERROR: ${analysis.unsupportedConstructs.join(", ")}`,
         });
         return;
       }
