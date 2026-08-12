@@ -47,23 +47,39 @@ export default function HomePage() {
 
     setValidationError(null);
 
-    if (algo.id === "graph-demo") {
-      const graphTrace = algo.generateTrace(null);
-      loadTrace(graphTrace);
-    } else if (algo.category === "recursion") {
-      if (algo.id === "recursive-binary-search") {
-        const trace = algo.generateTrace({ array: arr, target } as unknown as SearchInput);
-        loadTrace(trace);
+    try {
+      if (algo.id === "graph-demo") {
+        const graphTrace = algo.generateTrace(null);
+        loadTrace(graphTrace);
+      } else if (algo.category === "recursion") {
+        if (algo.id === "recursive-binary-search") {
+          const trace = algo.generateTrace({ array: arr, target } as unknown as SearchInput);
+          loadTrace(trace);
+        } else if (algo.id === "tower-of-hanoi") {
+          const disks = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 1), 5) : 3;
+          const trace = algo.generateTrace(disks as unknown as SearchInput);
+          loadTrace(trace);
+        } else if (algo.id === "factorial") {
+          const num = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 1), 10) : 4;
+          const trace = algo.generateTrace(num as unknown as SearchInput);
+          loadTrace(trace);
+        } else if (algo.id === "fibonacci") {
+          const num = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 0), 7) : 5;
+          const trace = algo.generateTrace(num as unknown as SearchInput);
+          loadTrace(trace);
+        } else {
+          const trace = algo.generateTrace(4 as unknown as SearchInput);
+          loadTrace(trace);
+        }
+      } else if (algo.category === "searching") {
+        const searchTrace = algo.generateTrace({ array: arr, target } as unknown as SearchInput);
+        loadTrace(searchTrace);
       } else {
-        const trace = algo.generateTrace((target || 4) as unknown as SearchInput);
+        const trace = algo.generateTrace(arr as unknown as SearchInput);
         loadTrace(trace);
       }
-    } else if (algo.category === "searching") {
-      const searchTrace = algo.generateTrace({ array: arr, target } as unknown as SearchInput);
-      loadTrace(searchTrace);
-    } else {
-      const trace = algo.generateTrace(arr as unknown as SearchInput);
-      loadTrace(trace);
+    } catch (err: any) {
+      setValidationError(err.message || "Failed to generate trace for algorithm.");
     }
   };
 
