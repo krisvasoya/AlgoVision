@@ -3,16 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layers, BookOpen, GraduationCap, Code2 } from "lucide-react";
+import { LayoutDashboard, BookOpen, Award, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Algorithms", href: "/algorithms", icon: Layers },
-    { name: "Data Structures", href: "/algorithms?category=data-structures", icon: BookOpen },
-    { name: "Practice", href: "/practice", icon: GraduationCap },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Learn", href: "/", icon: BookOpen },
+    { name: "Exams", href: "/exam", icon: Award },
+    { name: "Playground", href: "/playground", icon: Terminal },
   ];
 
   return (
@@ -32,15 +33,15 @@ export const Header: React.FC = () => {
       <nav className="flex items-center gap-1 font-medium text-sm">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors",
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs font-sans font-semibold",
                 isActive
-                  ? "bg-indigo-600/15 text-indigo-400 font-semibold"
+                  ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
               )}
             >
