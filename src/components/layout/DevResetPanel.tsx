@@ -9,6 +9,12 @@ export const DevResetPanel: React.FC = () => {
   const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    // Security check: Only allow developer testing panel outside production
+    if (process.env.NODE_ENV === "production") {
+      setIsDev(false);
+      return;
+    }
+
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("dev") === "true") {
