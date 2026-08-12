@@ -29,8 +29,6 @@ export default function ExamPage() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
-
   // Timer Effect
   useEffect(() => {
     if (!session || session.status !== "in-progress") return;
@@ -108,6 +106,8 @@ export default function ExamPage() {
     const s = seconds % 60;
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 font-sans antialiased">

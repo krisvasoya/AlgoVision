@@ -4,50 +4,81 @@ export const dynamic = "force-dynamic";
 
 import React, { useState } from "react";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { CodeEditor } from "@/components/code-editor/CodeEditor";
+import { Visualizer } from "@/components/visualizers/Visualizer";
 import { Timeline } from "@/components/timeline/Timeline";
 import { VariableInspector } from "@/components/variables/VariableInspector";
-import { CallStackRenderer } from "@/components/visualizers/CallStackRenderer";
-import { Visualizer } from "@/components/visualizers/Visualizer";
-import { useExecutionStore } from "@/stores/execution-store";
-import { SandboxRuntime } from "@/engine/runtime/SandboxRuntime";
-import { CodeAnalyzer } from "@/engine/analysis/CodeAnalyzer";
+import { ExecutionEngine } from "@/engine/execution/ExecutionEngine";
+import { CodeAnalyzer } from "@/engine/static-analysis/CodeAnalyzer";
 import { VisualizationInferenceEngine } from "@/engine/visualization/VisualizationInferenceEngine";
-import { VisualStateBuilder } from "@/engine/visualization/VisualStateBuilder";
-import type { InferredVisualization } from "@/engine/visualization/types";
-import { Play, Square, RotateCcw, Terminal, AlertTriangle, ShieldCheck, Eye, Sparkles } from "lucide-react";
+import { useExecutionStore } from "@/stores/execution-store";
+import type { InferredVisualization } from "@/types/visualization";
+import { Play, Square, RotateCcw, Sparkles, Eye, Terminal, ShieldCheck } from "lucide-react";
 
-const PRESETS = [
+interface PresetCode {
+  id: string;
+  name: string;
+  code: string;
+  input: string;
+}
+
+const PRESETS: PresetCode[] = [
   {
-    id: "add",
-    name: "1. Arithmetic Add",
-    code: `function add(a, b) {\n  return a + b;\n}`,
-    input: `{\n  "a": 5,\n  "b": 7\n}`,
+    id: "bubble-sort",
+    name: "Bubble Sort",
+    code: `function bubbleSort(arr) {
+  let n = arr.length;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        let temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+  return arr;
+}`,
+    input: `{\n  "arr": [64, 34, 25, 12, 22, 11]\n}`,
   },
   {
-    id: "max",
-    name: "2. Condition Max",
-    code: `function max(a, b) {\n  if (a > b) {\n    return a;\n  }\n  return b;\n}`,
-    input: `{\n  "a": 12,\n  "b": 8\n}`,
+    id: "binary-search",
+    name: "Binary Search",
+    code: `function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+  while (left <= right) {
+    let mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+    if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1;
+}`,
+    input: `{\n  "arr": [10, 20, 30, 40, 50],\n  "target": 30\n}`,
   },
   {
-    id: "sum",
-    name: "3. Loop Sum",
-    code: `function sum(n) {\n  let total = 0;\n  for (let i = 1; i <= n; i++) {\n    total = total + i;\n  }\n  return total;\n}`,
-    input: `{\n  "n": 5\n}`,
+    id: "linked-list",
+    name: "Linked List Traversal",
+    code: `function traverse(head) {
+  let current = head;
+  let sum = 0;
+  while (current !== null) {
+    sum += current.val;
+    current = current.next;
+  }
+  return sum;
+}`,
+    input: `{\n  "head": {\n    "val": 10,\n    "next": {\n      "val": 20,\n      "next": {\n        "val": 30,\n        "next": null\n      }\n    }\n  }\n}`,
   },
   {
     id: "factorial",
-    name: "4. Recursion Factorial",
-    code: `function factorial(n) {\n  if (n <= 1) {\n    return 1;\n  }\n  return n * factorial(n - 1);\n}`,
-    input: `{\n  "n": 4\n}`,
-  },
-  {
-    id: "linearSearch",
-    name: "5. Array Linear Search",
-    code: `function linearSearch(arr, target) {\n  for (let i = 0; i < arr.length; i++) {\n    if (arr[i] === target) {\n      return i;\n    }\n  }\n  return -1;\n}`,
-    input: `{\n  "arr": [10, 20, 30, 40, 50],\n  "target": 30\n}`,
+    name: "Recursion (Factorial)",
+    code: `function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}`,
+    input: `{\n  "n": 5\n}`,
   },
 ];
 
@@ -66,15 +97,13 @@ export default function PlaygroundPage() {
     durationMs?: number;
     error?: string;
   }>({});
+
+  const { loadTrace, currentStep, reset } = useExecutionStore();
   const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (!mounted) return null;
-
-  const { loadTrace, currentStep, reset } = useExecutionStore();
 
   const handleSelectPreset = (presetId: string) => {
     const preset = PRESETS.find((p) => p.id === presetId);
@@ -98,29 +127,34 @@ export default function PlaygroundPage() {
 
       // 1. Static Analysis
       const analysis = CodeAnalyzer.analyze(code);
+      if (!analysis.isValid) {
+        setStatus("error");
+        setExecutionOutput({
+          error: `STATIC_ANALYSIS_ERROR: ${analysis.errors.join(", ")}`,
+        });
+        return;
+      }
 
-      // 2. Safe Execution
-      const result = SandboxRuntime.execute(code, parsedArgs, { maxSteps: 1000, maxTimeMs: 1000 });
+      // 2. Execution via Bounded Sandboxed Interpreter
+      const argsArray = Object.values(parsedArgs);
+      const result = ExecutionEngine.execute(code, argsArray);
 
-      if (result.status === "completed") {
-        // 3. Visualization Inference
-        let inferred = VisualizationInferenceEngine.infer(analysis, result.events, code);
+      if (result.success && result.trace) {
+        // 3. Automatic Visualization Inference
+        let inferred = VisualizationInferenceEngine.inferVisualization(result.trace);
 
-        if (manualOverride !== "automatic" && manualOverride !== "none") {
+        // Apply Manual Override if specified
+        if (manualOverride !== "automatic") {
           inferred = {
             type: manualOverride as any,
             confidence: 1.0,
-            explanation: `Manual override selected: ${manualOverride.toUpperCase()}`,
-            observedBehaviors: ["User-selected visualization mode"],
+            rationale: ["User manual visualization override enforced."],
+            derivedState: inferred.derivedState,
           };
         }
 
         setInference(inferred);
-
-        // 4. VisualState Trace Adapter
-        const trace = VisualStateBuilder.buildTrace(code, parsedArgs, result.events, inferred);
-        loadTrace(trace);
-
+        loadTrace(result.trace);
         setStatus("completed");
         setExecutionOutput({
           returnValue: result.returnValue,
@@ -147,6 +181,8 @@ export default function PlaygroundPage() {
     setStatus("stopped");
     reset();
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 font-sans antialiased">
@@ -266,83 +302,55 @@ export default function PlaygroundPage() {
                 </span>
               </div>
 
-              <p className="text-xs text-slate-300 font-sans">{inference.explanation}</p>
-
-              {inference.observedBehaviors.length > 0 && (
-                <div className="mt-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Observed Behaviors:</span>
-                  <ul className="text-xs font-mono text-slate-400 list-disc list-inside space-y-0.5">
-                    {inference.observedBehaviors.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="text-xs text-slate-400 space-y-1 mt-1 font-mono">
+                {inference.rationale.map((r, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className="text-indigo-400">•</span> {r}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Execution Status Banner */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-2 shadow">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Execution Status</span>
-              <span
-                className={`text-xs font-bold font-mono px-2.5 py-0.5 rounded border uppercase ${
-                  status === "completed"
-                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
-                    : status === "error"
-                    ? "bg-rose-950 text-rose-300 border-rose-500/40"
-                    : status === "running"
-                    ? "bg-indigo-950 text-indigo-300 border-indigo-500/40 animate-pulse"
-                    : "bg-slate-800 text-slate-400 border-slate-700"
-                }`}
-              >
-                {status}
-              </span>
+          {/* Live Visualization Frame */}
+          <div className="h-[300px] bg-slate-900 border border-slate-800 rounded-xl p-2 shadow overflow-hidden">
+            <Visualizer />
+          </div>
+
+          {/* Execution Step & Timeline Controls */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow">
+            <Timeline />
+          </div>
+
+          {/* Scope Inspector & Execution Output Log */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-[220px]">
+              <VariableInspector variables={currentStep?.variables} />
             </div>
 
-            {status === "completed" && (
-              <div className="text-xs font-mono space-y-1 text-slate-300 mt-1">
-                <div className="flex items-center justify-between text-emerald-400 font-bold">
-                  <span>Return Value:</span>
-                  <span>{JSON.stringify(executionOutput.returnValue)}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-400 text-[11px]">
-                  <span>Total Steps: {executionOutput.stepCount}</span>
-                  <span>Execution Time: {executionOutput.durationMs}ms</span>
-                </div>
+            <div className="h-[220px] bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-2">
+                Execution Output & Telemetry
               </div>
-            )}
-
-            {status === "error" && (
-              <div className="text-xs font-mono text-rose-400 bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-lg flex items-start gap-2 mt-1">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
-                <div>
-                  <span className="font-bold block">Execution Error:</span>
-                  <span>{executionOutput.error}</span>
-                </div>
+              <div className="flex-1 font-mono text-xs overflow-auto py-2 text-slate-300 space-y-1">
+                <div>Status: <span className="text-indigo-400 font-bold uppercase">{status}</span></div>
+                {executionOutput.durationMs !== undefined && (
+                  <div>Execution Time: <span className="text-emerald-400">{executionOutput.durationMs.toFixed(2)} ms</span></div>
+                )}
+                {executionOutput.stepCount !== undefined && (
+                  <div>Recorded Trace Steps: <span className="text-amber-400">{executionOutput.stepCount}</span></div>
+                )}
+                {executionOutput.returnValue !== undefined && (
+                  <div className="text-emerald-300 font-bold">Return Value: {JSON.stringify(executionOutput.returnValue)}</div>
+                )}
+                {executionOutput.error && (
+                  <div className="text-rose-400 font-bold break-all">Error: {executionOutput.error}</div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-
-          {/* Universal Visualizer Preview */}
-          <div className="h-[220px]">
-            <Visualizer state={currentStep?.state} />
-          </div>
-
-          {/* Timeline */}
-          <Timeline />
-
-          {/* Active Call Stack */}
-          <div className="h-[180px]">
-            <CallStackRenderer runtimeState={currentStep?.runtimeState} />
-          </div>
-
-          {/* Variables Inspector */}
-          <VariableInspector variables={currentStep?.variables} />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

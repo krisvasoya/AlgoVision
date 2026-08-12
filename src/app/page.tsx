@@ -40,8 +40,6 @@ export default function HomePage() {
   const activeAlgorithm = ALGORITHM_REGISTRY.get(selectedAlgoId) || allAlgorithms[0];
   const isSearchAlgo = activeAlgorithm?.category === "searching";
 
-  if (!mounted) return null;
-
   // Re-generate execution trace when algorithm or input changes
   const runAlgorithmTrace = (algoId: string, arr: number[], target: number) => {
     const algo = ALGORITHM_REGISTRY.get(algoId);
@@ -203,6 +201,8 @@ export default function HomePage() {
       runAlgorithmTrace(selectedAlgoId, inputArray, num);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-100">
