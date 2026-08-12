@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, BookOpen, Award, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DevResetPanel } from "./DevResetPanel";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
@@ -51,6 +52,8 @@ export const Header: React.FC = () => {
           );
         })}
       </nav>
+
+      <DevResetPanel />
     </header>
   );
 };

@@ -110,7 +110,7 @@ export class ArrayTraceBuilder<T extends number | string = number | string> {
       variables: clonedVariables,
       state: visualState,
       metadata: {
-        description,
+        description: description || "",
         complexityHint,
       },
     };

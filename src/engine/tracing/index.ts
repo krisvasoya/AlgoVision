@@ -18,7 +18,7 @@ export class TraceBuilder {
       event,
       variables: JSON.parse(JSON.stringify(variables)),
       state: JSON.parse(JSON.stringify(state)),
-      metadata: { description },
+      metadata: { description: description || "" },
     };
     this.steps.push(step);
     return step;
