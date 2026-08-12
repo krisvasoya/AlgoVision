@@ -7,7 +7,7 @@ import { ProgressTracker } from "@/engine/progress/ProgressTracker";
 import type { StudentProgress } from "@/engine/progress/types";
 import { ALGORITHM_REGISTRY } from "@/algorithms";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Target, Award, ShieldAlert, RotateCcw, ArrowRight, History } from "lucide-react";
+import { LayoutDashboard, BookOpen, Target, ShieldAlert, ArrowRight, History, RotateCcw } from "lucide-react";
 
 export default function DashboardPage() {
   const [progress, setProgress] = useState<StudentProgress | null>(null);
@@ -32,7 +32,7 @@ export default function DashboardPage() {
               <LayoutDashboard className="w-6 h-6 text-indigo-400" /> Student Learning Dashboard
             </h1>
             <p className="text-slate-400 text-xs mt-1">
-              Track your algorithm visual lessons, practice accuracy, exam competency scores, and weak topics.
+              Track your algorithm visual lessons, practice accuracy, exam competency scores, and review mistakes.
             </p>
           </div>
           <Link
@@ -76,6 +76,50 @@ export default function DashboardPage() {
             </div>
             <span className="text-[11px] text-slate-500 mt-1">Actionable concepts to study</span>
           </div>
+        </div>
+
+        {/* Review Mistakes Section */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+              <RotateCcw className="w-4 h-4 text-rose-400" /> Review Mistakes Queue ({progress.reviewQueue.length})
+            </h3>
+            <span className="text-[11px] font-mono text-slate-400">Spaced Review Flow</span>
+          </div>
+
+          {progress.reviewQueue.length > 0 ? (
+            <div className="space-y-3">
+              {progress.reviewQueue.map((item) => (
+                <div key={item.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-sans text-xs">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                      <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold uppercase">
+                        {item.topic}
+                      </span>
+                      <span className="text-slate-400">Algorithm: {item.algorithmId}</span>
+                    </div>
+                    <p className="font-bold text-slate-200">{item.questionPrompt}</p>
+                    <div className="font-mono text-[11px] text-slate-400 space-x-3">
+                      <span>Your Answer: <span className="text-rose-400 line-through">{item.userAnswer}</span></span>
+                      <span>Correct: <span className="text-emerald-400 font-bold">{item.correctAnswer}</span></span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 italic">{item.explanation}</p>
+                  </div>
+
+                  <Link
+                    href={`/?algo=${item.algorithmId}`}
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shrink-0 flex items-center gap-1 shadow"
+                  >
+                    Revisit Lesson <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center font-mono text-xs text-emerald-400">
+              You&apos;re clean for now! Zero recorded mistakes. Keep practicing!
+            </div>
+          )}
         </div>
 
         {/* Continue Learning & Weak Topics Row */}
