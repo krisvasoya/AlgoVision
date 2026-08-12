@@ -13,12 +13,14 @@ interface CodeEditorProps {
   code?: string;
   currentLine?: number;
   readOnly?: boolean;
+  onChange?: (value: string) => void;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
   code = "// Select an algorithm to view source code",
   currentLine,
   readOnly = true,
+  onChange,
 }) => {
   const monaco = useMonaco();
   const editorRef = useRef<MonacoEditorInstance | null>(null);
@@ -76,6 +78,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           defaultLanguage="javascript"
           theme="vs-dark"
           value={code}
+          onChange={(val) => onChange?.(val || "")}
           onMount={(editor) => handleEditorDidMount(editor as unknown as MonacoEditorInstance)}
           options={{
             readOnly,

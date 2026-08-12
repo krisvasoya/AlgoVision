@@ -11,10 +11,11 @@ import { CodeEditor } from "@/components/code-editor/CodeEditor";
 import { VariableInspector } from "@/components/variables/VariableInspector";
 import { ExplanationPanel } from "@/components/explanation/ExplanationPanel";
 import { Timeline } from "@/components/timeline/Timeline";
+import { TutorPanel } from "@/components/tutor/TutorPanel";
 import { useExecutionStore } from "@/stores/execution-store";
 import { ALGORITHM_REGISTRY } from "@/algorithms";
 import { isArraySorted } from "@/algorithms/searching/binarySearch";
-import { Dices, BarChart2, Search, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Dices, BarChart2, Search, AlertTriangle, ArrowUpDown, Bot, X } from "lucide-react";
 import type { SearchInput } from "@/algorithms/searching/linearSearch";
 
 export default function HomePage() {
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [targetValue, setTargetValue] = useState<number>(70);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [learningMode, setLearningMode] = useState<LearningMode>("learn");
+  const [showTutorPanel, setShowTutorPanel] = useState<boolean>(false);
 
   const activeAlgorithm = ALGORITHM_REGISTRY.get(selectedAlgoId) || allAlgorithms[0];
   const isSearchAlgo = activeAlgorithm?.category === "searching";
@@ -247,25 +249,39 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Validation Warning & Explicit "Sort Input" Action */}
-        {validationError && (
-          <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded px-3 py-1 text-amber-300">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-            <span className="font-semibold">{validationError}</span>
-            <button
-              onClick={handleExplicitSortInput}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold border border-amber-500/40 transition-colors"
-            >
-              <ArrowUpDown className="w-3 h-3" /> Sort Input
-            </button>
-          </div>
-        )}
+        {/* AI Tutor Toggle Button */}
+        <div className="flex items-center gap-3">
+          {validationError && (
+            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded px-3 py-1 text-amber-300">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="font-semibold">{validationError}</span>
+              <button
+                onClick={handleExplicitSortInput}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold border border-amber-500/40 transition-colors"
+              >
+                <ArrowUpDown className="w-3 h-3" /> Sort Input
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowTutorPanel((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded font-bold transition-all border ${
+              showTutorPanel
+                ? "bg-emerald-600 text-white border-emerald-500 shadow"
+                : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 shadow"
+            }`}
+          >
+            {showTutorPanel ? <X className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+            {showTutorPanel ? "Close AI Tutor" : "Grounded AI Tutor"}
+          </button>
+        </div>
       </div>
 
       {/* Main Workspace Split View */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 p-3 overflow-hidden min-h-0">
-        {/* Left Pane: Visualizer & Runtime Variables or Practice Mode */}
-        <div className="flex flex-col gap-3 overflow-hidden">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden min-h-0">
+        {/* Left Pane: Visualizer & Runtime Variables or Practice Mode (7 or 12 Cols depending on AI Tutor toggle) */}
+        <div className={`flex flex-col gap-3 overflow-hidden ${showTutorPanel ? "lg:col-span-7" : "lg:col-span-6"}`}>
           <div className="flex-1 min-h-0">
             <Visualizer state={currentStep?.state} />
           </div>
@@ -285,22 +301,28 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Right Pane: Source Code Editor, Explanation, & Educational Insights */}
-        <div className="flex flex-col gap-3 overflow-hidden">
-          <div className="flex-1 min-h-0">
-            <CodeEditor
-              code={trace?.sourceCode || activeAlgorithm?.sourceCode || "// Source Code"}
-              currentLine={currentStep?.line}
-            />
-          </div>
-          <div className="h-44 flex flex-col gap-2">
-            <ExplanationPanel
-              description={currentStep?.metadata?.description}
-              event={currentStep?.event}
-              complexityHint={currentStep?.metadata?.complexityHint}
-            />
-            <EducationalInfo algorithm={activeAlgorithm} />
-          </div>
+        {/* Right Pane: Code Editor & Explanation OR AI Tutor Panel */}
+        <div className={`flex flex-col gap-3 overflow-hidden ${showTutorPanel ? "lg:col-span-5" : "lg:col-span-6"}`}>
+          {showTutorPanel ? (
+            <TutorPanel />
+          ) : (
+            <>
+              <div className="flex-1 min-h-0">
+                <CodeEditor
+                  code={trace?.sourceCode || activeAlgorithm?.sourceCode || "// Source Code"}
+                  currentLine={currentStep?.line}
+                />
+              </div>
+              <div className="h-44 flex flex-col gap-2">
+                <ExplanationPanel
+                  description={currentStep?.metadata?.description}
+                  event={currentStep?.event}
+                  complexityHint={currentStep?.metadata?.complexityHint}
+                />
+                <EducationalInfo algorithm={activeAlgorithm} />
+              </div>
+            </>
+          )}
         </div>
       </main>
 

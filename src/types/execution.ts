@@ -56,6 +56,7 @@ export interface StepMetadata {
   note?: string;
   callStack?: string[];
   complexityHint?: string;
+  conversionError?: string;
 }
 
 export interface ExecutionStep {
