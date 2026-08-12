@@ -27,6 +27,7 @@ export default function HomePage() {
   const [selectedAlgoId, setSelectedAlgoId] = useState<string>("bubble-sort");
   const [inputArray, setInputArray] = useState<number[]>([7, 2, 9, 1, 5]);
   const [customInputText, setCustomInputText] = useState<string>("7, 2, 9, 1, 5");
+  const [numberInputVal, setNumberInputVal] = useState<number>(3);
   const [targetValue, setTargetValue] = useState<number>(70);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [learningMode, setLearningMode] = useState<LearningMode>("learn");
@@ -38,10 +39,13 @@ export default function HomePage() {
   }, []);
 
   const activeAlgorithm = ALGORITHM_REGISTRY.get(selectedAlgoId) || allAlgorithms[0];
-  const isSearchAlgo = activeAlgorithm?.category === "searching";
+  const inputSchema = activeAlgorithm?.inputSchema;
+  const isNumberAlgo = inputSchema?.fields[0]?.type === "number" || activeAlgorithm?.category === "recursion";
+  const showRandomize = inputSchema?.showRandomize !== false && !isNumberAlgo && activeAlgorithm?.id !== "graph-demo";
+  const isSearchAlgo = inputSchema?.hasTarget ?? activeAlgorithm?.category === "searching";
 
   // Re-generate execution trace when algorithm or input changes
-  const runAlgorithmTrace = (algoId: string, arr: number[], target: number) => {
+  const runAlgorithmTrace = (algoId: string, arr: number[], target: number, numVal: number = 3) => {
     const algo = ALGORITHM_REGISTRY.get(algoId);
     if (!algo) return;
 
@@ -63,15 +67,15 @@ export default function HomePage() {
           const trace = algo.generateTrace({ array: arr, target } as unknown as SearchInput);
           loadTrace(trace);
         } else if (algo.id === "tower-of-hanoi") {
-          const disks = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 1), 5) : 3;
+          const disks = Math.min(Math.max(numVal, 1), 5);
           const trace = algo.generateTrace(disks as unknown as SearchInput);
           loadTrace(trace);
         } else if (algo.id === "factorial") {
-          const num = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 1), 10) : 4;
+          const num = Math.min(Math.max(numVal, 1), 7);
           const trace = algo.generateTrace(num as unknown as SearchInput);
           loadTrace(trace);
         } else if (algo.id === "fibonacci") {
-          const num = typeof target === "number" && !isNaN(target) ? Math.min(Math.max(target, 0), 7) : 5;
+          const num = Math.min(Math.max(numVal, 0), 7);
           const trace = algo.generateTrace(num as unknown as SearchInput);
           loadTrace(trace);
         } else {
@@ -92,13 +96,12 @@ export default function HomePage() {
 
   // Initial load
   useEffect(() => {
-    runAlgorithmTrace(selectedAlgoId, inputArray, targetValue);
+    runAlgorithmTrace(selectedAlgoId, inputArray, targetValue, numberInputVal);
   }, [selectedAlgoId]);
 
   // Global Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore shortcut keys if user is typing in an input element
       const target = e.target as HTMLElement;
       if (
         target &&
@@ -112,17 +115,14 @@ export default function HomePage() {
 
       if (e.code === "Space") {
         e.preventDefault();
-        if (isPlaying) {
-          pause();
-        } else {
-          play();
-        }
-      } else if (e.code === "ArrowLeft") {
-        e.preventDefault();
-        previous();
+        if (isPlaying) pause();
+        else play();
       } else if (e.code === "ArrowRight") {
         e.preventDefault();
         next();
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        previous();
       } else if (e.code === "KeyR") {
         e.preventDefault();
         first();
@@ -138,14 +138,17 @@ export default function HomePage() {
     setSelectedAlgoId(newId);
 
     const newAlgo = ALGORITHM_REGISTRY.get(newId);
+    const defaultNum = newAlgo?.inputSchema?.fields[0]?.defaultValue ?? 3;
+    setNumberInputVal(defaultNum);
+
     if (newAlgo?.id === "binary-search") {
       if (!isArraySorted(inputArray)) {
         setValidationError("Binary Search requires a sorted array.");
       } else {
-        runAlgorithmTrace(newId, inputArray, targetValue);
+        runAlgorithmTrace(newId, inputArray, targetValue, defaultNum);
       }
     } else {
-      runAlgorithmTrace(newId, inputArray, targetValue);
+      runAlgorithmTrace(newId, inputArray, targetValue, defaultNum);
     }
   };
 
@@ -154,7 +157,7 @@ export default function HomePage() {
     setInputArray(sorted);
     setCustomInputText(sorted.join(", "));
     setValidationError(null);
-    runAlgorithmTrace(selectedAlgoId, sorted, targetValue);
+    runAlgorithmTrace(selectedAlgoId, sorted, targetValue, numberInputVal);
   };
 
   const handleRandomize = () => {
@@ -172,12 +175,17 @@ export default function HomePage() {
     if (selectedAlgoId === "binary-search" && !isArraySorted(randomArr)) {
       setValidationError("Binary Search requires a sorted array.");
     } else {
-      runAlgorithmTrace(selectedAlgoId, randomArr, newTarget);
+      runAlgorithmTrace(selectedAlgoId, randomArr, newTarget, numberInputVal);
     }
   };
 
   const handleCustomInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isNumberAlgo) {
+      runAlgorithmTrace(selectedAlgoId, inputArray, targetValue, numberInputVal);
+      return;
+    }
+
     const parsed = customInputText
       .split(",")
       .map((s: string) => parseInt(s.trim(), 10))
@@ -188,7 +196,7 @@ export default function HomePage() {
       if (selectedAlgoId === "binary-search" && !isArraySorted(parsed)) {
         setValidationError("Binary Search requires a sorted array.");
       } else {
-        runAlgorithmTrace(selectedAlgoId, parsed, targetValue);
+        runAlgorithmTrace(selectedAlgoId, parsed, targetValue, numberInputVal);
       }
     }
   };
@@ -198,7 +206,7 @@ export default function HomePage() {
     const num = isNaN(val) ? 0 : val;
     setTargetValue(num);
     if (!validationError) {
-      runAlgorithmTrace(selectedAlgoId, inputArray, num);
+      runAlgorithmTrace(selectedAlgoId, inputArray, num, numberInputVal);
     }
   };
 
@@ -215,8 +223,8 @@ export default function HomePage() {
         onModeChange={(mode) => setLearningMode(mode)}
       />
 
-      {/* Control Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between px-6 py-2 bg-slate-900/60 border-b border-slate-800 gap-3 text-xs">
+      {/* Declarative Control Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between px-6 py-2 bg-slate-900/60 border-b border-slate-800 gap-3 text-xs shrink-0">
         <div className="flex items-center gap-4">
           {/* Algorithm Selector Dropdown */}
           <div className="flex items-center gap-2">
@@ -234,16 +242,34 @@ export default function HomePage() {
             </select>
           </div>
 
-          {/* Array Input Form */}
+          {/* Declarative Input Form */}
           <form onSubmit={handleCustomInputSubmit} className="flex items-center gap-2">
-            <span className="text-slate-400 font-medium">Input Array:</span>
-            <input
-              type="text"
-              value={customInputText}
-              onChange={(e) => setCustomInputText(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 font-mono text-slate-200 w-36 focus:outline-none focus:border-indigo-500"
-              placeholder="7, 2, 9, 1, 5"
-            />
+            {isNumberAlgo ? (
+              <>
+                <span className="text-slate-400 font-medium">
+                  {inputSchema?.fields[0]?.label || "Number of Disks"}:
+                </span>
+                <input
+                  type="number"
+                  min={inputSchema?.fields[0]?.validation?.min ?? 1}
+                  max={inputSchema?.fields[0]?.validation?.max ?? 5}
+                  value={numberInputVal}
+                  onChange={(e) => setNumberInputVal(parseInt(e.target.value, 10) || 1)}
+                  className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 font-mono text-slate-200 w-16 focus:outline-none focus:border-indigo-500"
+                />
+              </>
+            ) : (
+              <>
+                <span className="text-slate-400 font-medium">Input Array:</span>
+                <input
+                  type="text"
+                  value={customInputText}
+                  onChange={(e) => setCustomInputText(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 font-mono text-slate-200 w-36 focus:outline-none focus:border-indigo-500"
+                  placeholder="7, 2, 9, 1, 5"
+                />
+              </>
+            )}
             <button
               type="submit"
               className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
@@ -266,12 +292,15 @@ export default function HomePage() {
             </div>
           )}
 
-          <button
-            onClick={handleRandomize}
-            className="flex items-center gap-1.5 px-3 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-medium border border-indigo-500/30 transition-colors"
-          >
-            <Dices className="w-3.5 h-3.5" /> Randomize
-          </button>
+          {/* Randomize Button (Only shown when declarative schema permits) */}
+          {showRandomize && (
+            <button
+              onClick={handleRandomize}
+              className="flex items-center gap-1.5 px-3 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-medium border border-indigo-500/30 transition-colors"
+            >
+              <Dices className="w-3.5 h-3.5" /> Randomize
+            </button>
+          )}
         </div>
 
         {/* AI Tutor Toggle Button */}
@@ -305,53 +334,57 @@ export default function HomePage() {
 
       {/* Main Workspace Split View */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden min-h-0">
-        {/* Left Pane: Visualizer & Runtime Variables or Practice Mode (7 or 12 Cols depending on AI Tutor toggle) */}
-        <div className={`flex flex-col gap-3 overflow-hidden ${showTutorPanel ? "lg:col-span-7" : "lg:col-span-6"}`}>
-          <div className="flex-1 min-h-0">
-            <Visualizer state={currentStep?.state} />
-          </div>
-
+        {/* Left Column: Visualizer & Code Editor / Practice Mode */}
+        <div className={`flex flex-col gap-3 min-h-0 min-w-0 ${showTutorPanel ? "lg:col-span-8" : "lg:col-span-12"}`}>
           {learningMode === "practice" ? (
-            <div className="h-56 overflow-y-auto">
-              <PracticeModePanel
-                currentStepIndex={currentStepIndex}
-                trace={trace}
-                onNextStep={next}
-              />
+            <div className="flex-1 min-h-0">
+              <PracticeModePanel currentStepIndex={currentStepIndex} trace={trace} onNextStep={next} />
             </div>
-          ) : (
-            <div className="h-44">
-              <VariableInspector variables={currentStep?.variables} />
-            </div>
-          )}
-        </div>
-
-        {/* Right Pane: Code Editor & Explanation OR AI Tutor Panel */}
-        <div className={`flex flex-col gap-3 overflow-hidden ${showTutorPanel ? "lg:col-span-5" : "lg:col-span-6"}`}>
-          {showTutorPanel ? (
-            <TutorPanel />
           ) : (
             <>
-              <div className="flex-1 min-h-0">
-                <CodeEditor
-                  code={trace?.sourceCode || activeAlgorithm?.sourceCode || "// Source Code"}
-                  currentLine={currentStep?.line}
-                />
+              {/* Primary Visualization Canvas */}
+              <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+                <Visualizer />
               </div>
-              <div className="h-44 flex flex-col gap-2">
-                <ExplanationPanel
-                  description={currentStep?.metadata?.description}
-                  event={currentStep?.event}
-                  complexityHint={currentStep?.metadata?.complexityHint}
-                />
+
+              {/* Sub-Panel Grid: Code Editor, Variables, Explanation */}
+              <div className="h-[260px] grid grid-cols-1 md:grid-cols-12 gap-3 shrink-0">
+                <div className="md:col-span-5 h-full overflow-hidden">
+                  <CodeEditor code={trace?.sourceCode || activeAlgorithm.sourceCode} currentLine={currentStep?.line} />
+                </div>
+                <div className="md:col-span-4 h-full overflow-hidden">
+                  <VariableInspector variables={currentStep?.variables} />
+                </div>
+                <div className="md:col-span-3 h-full overflow-hidden">
+                  <ExplanationPanel
+                    description={currentStep?.metadata?.description}
+                    event={currentStep?.event}
+                    complexityHint={`Time: ${activeAlgorithm.complexity.average} | Space: ${activeAlgorithm.complexity.space}`}
+                  />
+                </div>
+              </div>
+
+              {/* Educational Algorithm Info */}
+              <div className="shrink-0">
                 <EducationalInfo algorithm={activeAlgorithm} />
               </div>
             </>
           )}
+
+          {/* Execution Step & Timeline Controls */}
+          <div className="shrink-0">
+            <Timeline />
+          </div>
         </div>
+
+        {/* Right Collapsible Column: Grounded AI Tutor */}
+        {showTutorPanel && (
+          <aside className="lg:col-span-4 h-full min-h-0 min-w-0 overflow-hidden bg-slate-900 border border-slate-800 rounded-xl shadow-xl flex flex-col">
+            <TutorPanel onClose={() => setShowTutorPanel(false)} />
+          </aside>
+        )}
       </main>
 
-      <Timeline />
       <Footer />
     </div>
   );

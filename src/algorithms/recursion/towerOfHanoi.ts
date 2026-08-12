@@ -191,6 +191,20 @@ export const towerOfHanoiDefinition: AlgorithmDefinition<number, HanoiVisualStat
   description: "Classic recursive puzzle of moving disks between 3 rods. Demonstrates divide-and-conquer call stack progression.",
   complexity: { best: "O(2^n)", average: "O(2^n)", worst: "O(2^n)", space: "O(n)" },
   defaultInput: 3,
+  inputSchema: {
+    fields: [
+      {
+        id: "diskCount",
+        label: "Number of Disks",
+        type: "number",
+        defaultValue: 3,
+        placeholder: "3",
+        validation: { integer: true, min: 1, max: 5 },
+      },
+    ],
+    showRandomize: false,
+    hasTarget: false,
+  },
   sourceCode: HANOI_SOURCE_CODE,
   generateTrace: (input: number) => generateHanoiTrace(typeof input === "number" ? input : 3),
 };

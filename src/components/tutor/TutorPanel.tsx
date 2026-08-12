@@ -18,7 +18,11 @@ interface Message {
   timestamp: string;
 }
 
-export const TutorPanel: React.FC = () => {
+interface TutorPanelProps {
+  onClose?: () => void;
+}
+
+export const TutorPanel: React.FC<TutorPanelProps> = ({ onClose }) => {
   const { trace, currentStepIndex } = useExecutionStore();
   const currentStep = trace?.steps[currentStepIndex];
 
