@@ -1,0 +1,35 @@
+{
+  "name": "algovision",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node --experimental-strip-types --test src/tests/engine.test.ts src/tests/types.test.ts src/tests/bubbleSort.test.ts src/tests/selectionSort.test.ts src/tests/insertionSort.test.ts src/tests/linearSearch.test.ts src/tests/binarySearch.test.ts src/tests/stack.test.ts src/tests/queue.test.ts src/tests/linkedList.test.ts src/tests/tree.test.ts src/tests/graph.test.ts src/tests/bfs.test.ts src/tests/dfs.test.ts src/tests/dijkstra.test.ts src/tests/crossGraph.test.ts src/tests/factorial.test.ts src/tests/fibonacci.test.ts src/tests/recursiveBinarySearch.test.ts src/tests/towerOfHanoi.test.ts src/tests/runtimeArchitecture.test.ts src/tests/architecture.test.ts src/tests/snapshotIsolation.test.ts src/tests/performance.test.ts src/tests/crossAlgorithm.test.ts src/tests/uiExperience.test.ts",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.11",
+    "lucide-react": "^0.454.0",
+    "next": "14.2.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
